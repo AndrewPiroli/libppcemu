@@ -7,6 +7,7 @@
 #ifndef _LIBPPCEMU_INTERNAL_INSTR_H
 #define _LIBPPCEMU_INTERNAL_INSTR_H
 
+#include <ppcemu/endian.h>
 #include "cr.h"
 #include "mem.h"
 #include "state.h"
@@ -233,6 +234,18 @@ static inline enum virt2phys_err do_indexed_load_signext_update(struct _ppcemu_s
 		state->gpr[rD] = (i32)(i16)(i8)state->gpr[rD];
 
 	state->gpr[rA] = ea;
+	return ret;
+}
+static inline enum virt2phys_err do_indexed_load_byterev(struct _ppcemu_state *state, uint len, uint rD, uint rA, uint rB) {
+	enum virt2phys_err ret = do_indexed_load(state, len, rD, rA, rB, NULL);
+	if (ret != V2P_SUCCESS)
+		return ret;
+
+	if (len == 4)
+		state->gpr[rD] = __ppcemu_swap32(state->gpr[rD]);
+	else if (len == 2)
+		state->gpr[rD] = __ppcemu_swap16(state->gpr[rD]);
+
 	return ret;
 }
 static inline enum virt2phys_err do_indexed_load_conditional(struct _ppcemu_state *state, uint len, uint rD, uint rA, uint rB) {
